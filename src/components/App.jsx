@@ -1,16 +1,29 @@
 import React, { Component } from "react";
 import TopLanguages from "./TopLanguages";
-import data from "../data";
+import gql from "graphql-tag";
+import { Query } from "react-apollo";
+
+const REPOSITORIES = gql`
+  {
+    viewer {
+      repositories(last: 100, isFork: false) {
+        nodes {
+          name
+          description
+          url
+          languages(first: 5) {
+            nodes {
+              color
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
 export default class App extends Component {
-  state = {
-    repositories: null
-  };
-
-  componentDidMount() {
-    this.setState({ repositories: data.data.viewer.repositories });
-  }
-
   render() {
     return (
       <div>
@@ -26,11 +39,16 @@ export default class App extends Component {
           }}
         >
           <h2 style={{ textAlign: "center" }}>Top Languages</h2>
-          {this.state.repositories ? (
-            <TopLanguages repositories={this.state.repositories} />
-          ) : (
-            <span>Loading...</span>
-          )}
+
+          <Query query={REPOSITORIES} variables={{}}>
+            {({ data, loading }) =>
+              loading ? (
+                <span>I am loading your data...</span>
+              ) : (
+                <TopLanguages repositories={data.viewer.repositories} />
+              )
+            }
+          </Query>
         </div>
       </div>
     );
